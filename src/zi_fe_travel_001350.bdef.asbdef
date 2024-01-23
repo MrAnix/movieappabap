@@ -1,0 +1,101 @@
+managed;
+with draft;
+
+define behavior for ZI_FE_Travel_001350 alias Travel
+implementation in class ZBP_I_FE_Travel_001350 unique
+persistent table ZFE_ATRAV_001350
+draft table ZFE_DTRAV_001350
+etag master LocalLastChangedAt
+lock master total etag LastChangedAt
+{
+
+  create;
+  update;
+  delete;
+
+  draft action Edit;
+  draft action Activate;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
+
+  mapping for ZFE_ATRAV_001350 corresponding
+  {
+    TravelUUID = TRAVEL_UUID;
+    TravelID = TRAVEL_ID;
+    AgencyID = AGENCY_ID;
+    CustomerID = CUSTOMER_ID;
+    BeginDate = BEGIN_DATE;
+    EndDate = END_DATE;
+    BookingFee = BOOKING_FEE;
+    TotalPrice = TOTAL_PRICE;
+    CurrencyCode = CURRENCY_CODE;
+    Description = DESCRIPTION;
+    OverallStatus = OVERALL_STATUS;
+    CreatedBy = CREATED_BY;
+    CreatedAt = CREATED_AT;
+    LastChangedBy = LAST_CHANGED_BY;
+    LastChangedAt = LAST_CHANGED_AT;
+    LocalLastChangedAt = LOCAL_LAST_CHANGED_AT;
+  }
+
+  association _Booking { create; }
+
+  static action ShowTestMessage;
+  action CancelTravel result [1] $self;
+
+  validation ValidateDates on save { create; }
+  validation ValidateCustomer on save { create; }
+  validation ValidateAgency on save { create; }
+  validation ValidateCurrencyCode on save { create; }
+
+  determination CalculateTravelID on save { create; }
+  determination DetermineStatus on modify { create; }
+  determination DetermineTravelId on modify { create; }
+
+  field ( readonly ) CreatedAt, CreatedBy, LastChangedAt, LastChangedBy, OverallStatus, TravelId;
+  field ( readonly, numbering : managed ) TravelUuid;
+  field ( mandatory : create ) AgencyId, BeginDate, CustomerId, Description, EndDate;
+  field ( readonly : update ) AgencyId, BeginDate, CustomerId, Description, EndDate;
+
+}
+
+define behavior for ZI_FE_Booking_001350 alias Booking
+implementation in class ZBP_I_FE_Booking_001350 unique
+persistent table ZFE_ABOOK_001350
+draft table ZFE_DBOOK_001350
+etag master LocalLastChangedAt
+lock dependent by _Travel
+
+{
+  field ( readonly )
+   TravelUUID,
+   BookingID;
+
+  field ( numbering : managed )
+   BookingUUID;
+
+  delete;
+  update;
+
+  mapping for ZFE_ABOOK_001350
+  {
+    BookingUUID = BOOKING_UUID;
+    TravelUUID = TRAVEL_UUID;
+    BookingID = BOOKING_ID;
+    BookingDate = BOOKING_DATE;
+    CustomerID = CUSTOMER_ID;
+    CarrierID = CARRIER_ID;
+    ConnectionID = CONNECTION_ID;
+    FlightDate = FLIGHT_DATE;
+    FlightPrice = FLIGHT_PRICE;
+    CurrencyCode = CURRENCY_CODE;
+    CreatedBy = CREATED_BY;
+    LastChangedBy = LAST_CHANGED_BY;
+    LocalLastChangedAt = LOCAL_LAST_CHANGED_AT;
+  }
+
+  association _Travel { with draft; }
+
+  determination CalculateBookingID on save { create; }
+}
